@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#252642">
+  <title>Study Quest — 可追溯考前測驗 Agent</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand-mark" aria-hidden="true">SQ</div>
+    <p class="pixel-label">STUDY QUEST</p>
+    <h2>課前補給站</h2>
+    <nav aria-label="主要導覽">
+      <a class="nav-link active" href="index.html">任務首頁</a>
+      <a class="nav-link" href="wiki/index.md">Wiki 圖鑑</a>
+      <a class="nav-link" href="wiki/study-notes.md">考前重點範例</a>
+      <a class="nav-link" href="wiki/workflow.md">流程地圖</a>
+      <a class="nav-link" href="slides/presentation.html">教學簡報</a>
+      <a class="nav-link" href="submission.md">繳交摘要</a>
+    </nav>
+    <p class="sidebar-note">本作品是 Agent 設計教學，不是可連接 AI 的測驗服務。</p>
+  </aside>
+
+  <main class="content">
+    <header class="hero pixel-panel">
+      <p class="pixel-label">QUEST 01 / LLM WIKI + GRAPH</p>
+      <h1>Study Quest<br><span class="accent">講義怪獸狩獵團</span></h1>
+      <p><strong>設計目標：先整理考前重點，再依資料出題；答錯可重練或存進錯題庫，並規劃下載重點、題目和錯題 PDF。</strong></p>
+      <div class="button-row">
+        <a class="pixel-button primary" href="slides/presentation.html">進入教學簡報 <span aria-hidden="true">→</span></a>
+        <a class="pixel-button" href="wiki/index.md">打開 Wiki 圖鑑</a>
+        <a class="pixel-button" href="wiki/study-notes.md">看考前重點範例</a>
+        <a class="pixel-button" href="wiki/user-guide.md">查看使用流程</a>
+      </div>
+      <span class="corner-star" aria-hidden="true">✦</span>
+    </header>
+
+    <section class="section-block">
+      <div class="section-heading">
+        <p class="pixel-label">PARTY NOTES</p>
+        <h2>這個 Agent 要解決什麼？</h2>
+      </div>
+      <div class="card-grid">
+        <article class="pixel-card">
+          <span class="card-icon" aria-hidden="true">01</span>
+          <h3>先整理考前重點</h3>
+          <p>按主題整理概念、步驟和容易混淆的地方，並附上資料位置，方便回頭複習。</p>
+          <a href="wiki/study-notes.md">看重點整理範例 <span aria-hidden="true">↗</span></a>
+        </article>
+        <article class="pixel-card">
+          <span class="card-icon cyan" aria-hidden="true">02</span>
+          <h3>每題都找得到根據</h3>
+          <p>講義模式只依課程講義；深入模式的網路補充另用醒目色標與來源標示。</p>
+          <a href="wiki/article3.md">檢視來源規則 <span aria-hidden="true">↗</span></a>
+        </article>
+        <article class="pixel-card">
+          <span class="card-icon gold" aria-hidden="true">03</span>
+          <h3>答錯也有下一步</h3>
+          <p>學生可選重練或跳過；跳過題目會存入所屬課程的錯題庫。</p>
+          <a href="wiki/workflow.md">查看分流流程 <span aria-hidden="true">↗</span></a>
+        </article>
+        <article class="pixel-card">
+          <span class="card-icon" aria-hidden="true">04</span>
+          <h3>Graph 管大路線</h3>
+          <p>專案、模式、範圍、出題、檢查與匯出各有節點，問題回到該修的位置。</p>
+          <a href="wiki/article4.md">認識 Graph 節點 <span aria-hidden="true">↗</span></a>
+        </article>
+      </div>
+    </section>
+
+    <section class="section-block lower-grid">
+      <article class="pixel-panel mini-panel">
+        <p class="pixel-label">SAVE SLOTS</p>
+        <h2>每門課一個專案</h2>
+        <p>設計中包含新增、選取、命名、刪除，並分開管理講義、題目、考試範圍與錯題集。</p>
+      </article>
+      <article class="pixel-panel mini-panel">
+        <p class="pixel-label">SOURCE CHEST</p>
+        <h2>五項已查閱來源</h2>
+        <p>從 Agent workflow、ReAct、RAG、Graph API 到 Agent evaluation，建立 Wiki 知識依據。</p>
+        <a href="raw/sources.md">查看 Ingest 紀錄 <span aria-hidden="true">↗</span></a>
+      </article>
+    </section>
+
+    <footer class="footer">PIXEL STUDY QUEST · 傳統中文教學示範 · 無外部字型或執行期服務</footer>
+  </main>
+</body>
+</html>

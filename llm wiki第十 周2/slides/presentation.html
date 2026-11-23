@@ -1,0 +1,643 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#252642">
+  <title>Study Quest：AI 考前練習助理</title>
+  <style>
+    :root {
+      --night: #252642;
+      --night2: #3a3b5c;
+      --ink: #292a45;
+      --muted: #d3d1df;
+      --paper: #fff8e8;
+      --paper2: #f2e7cb;
+      --pink: #f284a5;
+      --cyan: #66cddd;
+      --gold: #f6c75a;
+      --green: #63bd8b;
+      --red: #df7180;
+      --border: 3px solid var(--gold);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: var(--night);
+      color: var(--paper);
+      font-family: system-ui, "Segoe UI", sans-serif;
+    }
+
+    .deck { height: calc(100dvh - 66px); }
+    .slide {
+      display: none;
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+      padding: clamp(24px, 5vh, 58px) clamp(24px, 7vw, 96px);
+      color: var(--paper);
+      background-color: var(--night);
+      background-image: radial-gradient(var(--gold) 1.5px, transparent 1.5px),
+        radial-gradient(rgba(102, 205, 221, .65) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+      background-position: 12px 12px, 42px 38px, 0 0;
+      background-size: 72px 72px, 96px 96px, 24px 24px;
+    }
+
+    .slide.active { display: block; }
+    .cover-slide {
+      color: var(--paper);
+      background-color: var(--night);
+      background-image: radial-gradient(var(--gold) 1.5px, transparent 1.5px),
+        radial-gradient(rgba(102, 205, 221, .65) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+      background-position: 12px 12px, 42px 38px, 0 0;
+      background-size: 72px 72px, 96px 96px, 24px 24px;
+    }
+
+    .problem-slide {
+      color: var(--paper);
+      background-color: var(--night);
+      background-image: radial-gradient(var(--gold) 1.5px, transparent 1.5px),
+        radial-gradient(rgba(102, 205, 221, .65) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+      background-position: 12px 12px, 42px 38px, 0 0;
+      background-size: 72px 72px, 96px 96px, 24px 24px;
+    }
+
+    .problem-slide .eyebrow { color: var(--cyan); }
+    .problem-slide h2 { color: var(--paper); }
+    .problem-slide .card {
+      border-color: var(--gold);
+      background: var(--night2);
+      box-shadow: 7px 7px 0 #17182b;
+      color: var(--paper);
+    }
+    .problem-slide .card h3 { color: var(--gold); font-size: 1.15rem; }
+    .problem-slide .card p { color: #e2dfed; font-size: 1rem; line-height: 1.45; }
+    .problem-slide .pixel-monster { box-shadow: 3px 3px 0 var(--gold); }
+    .problem-slide .hint { border-left-color: var(--cyan); background: #343653; color: var(--paper); }
+    .problem-slide .hint strong { color: var(--gold); }
+    .problem-slide .source { color: #d3d1df; }
+    .problem-slide .source a { color: var(--cyan); }
+
+    .cover-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 3px solid #555674;
+    }
+
+    .cover-topbar .eyebrow { margin: 0; color: var(--cyan); }
+    .cover-layout { display: grid; grid-template-columns: 1.35fr .75fr; align-items: center; gap: clamp(20px, 5vw, 64px); min-height: 0; padding: 20px 0; }
+    .cover-slide h1 { max-width: 760px; margin: 14px 0; color: #fff8e8; font-size: clamp(2.6rem, 6.7vw, 5.5rem); }
+    .cover-slide .lead { color: #e2dfed; }
+    .cover-title-accent { color: var(--gold); text-shadow: 4px 4px 0 #a64e70; }
+    .cover-subtitle { margin: 0 0 12px; color: var(--paper); font-size: clamp(1.2rem, 2.8vw, 1.8rem) !important; font-weight: 850; }
+    .quest-objective {
+      position: relative;
+      padding: 22px;
+      border: 4px solid var(--gold);
+      background: var(--night2);
+      box-shadow: 7px 7px 0 #17182b;
+    }
+
+    .quest-objective h2 { margin: 10px 0; color: var(--gold); font-size: 1.45rem; }
+    .quest-objective p, .quest-objective li { color: #f0edf5; font-size: 1rem; }
+    .quest-objective ul { padding-left: 1.2em; }
+    .quest-stamp { display: inline-block; padding: 6px 8px; border: 2px solid var(--cyan); color: var(--cyan); font: 900 .75rem ui-monospace, Consolas, monospace; }
+    .pixel-mascot {
+      position: absolute;
+      top: -25px;
+      right: -17px;
+      width: 58px;
+      height: 58px;
+      border: 4px solid var(--night);
+      background: var(--pink);
+      box-shadow: 4px 4px 0 var(--gold);
+    }
+
+    .pixel-mascot::before {
+      content: "";
+      position: absolute;
+      top: 16px;
+      left: 10px;
+      width: 7px;
+      height: 10px;
+      background: var(--night);
+      box-shadow: 20px 0 var(--night);
+    }
+
+    .pixel-mascot::after {
+      content: "";
+      position: absolute;
+      bottom: 10px;
+      left: 20px;
+      width: 10px;
+      height: 4px;
+      background: var(--night);
+    }
+
+    .cover-flow { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-top: 20px; }
+    .cover-flow span { padding: 7px 9px; border: 2px solid #aeb0cc; background: #343653; color: #fff8e8; font: 800 .83rem ui-monospace, Consolas, monospace; }
+    .cover-flow b { color: var(--gold); }
+    .cover-slide .source { color: #d3d1df; }
+    .cover-slide .source a { color: var(--cyan); }
+    .cover-source { margin: 8px 0 0; color: #d3d1df !important; font-size: .75rem !important; }
+    .cover-source a { color: var(--cyan); }
+    .slide h1 { max-width: 900px; margin: 10px 0 18px; font-size: clamp(2.4rem, 7vw, 5.8rem); line-height: 1.04; }
+    .slide h2 { margin: 0 0 22px; font-size: clamp(1.7rem, 4vw, 3rem); line-height: 1.15; }
+    .slide h3 { margin: 8px 0; font-size: 1.08rem; }
+    .slide p, .slide li { font-size: clamp(.98rem, 1.65vw, 1.28rem); line-height: 1.55; }
+    .slide ul { margin: 10px 0; padding-left: 1.25em; }
+    .eyebrow, .tag, .source, .pixel-code { font-family: ui-monospace, Consolas, monospace; font-weight: 850; }
+    .eyebrow { margin: 0 0 10px; color: var(--cyan); font-size: .82rem; letter-spacing: .12em; }
+    .lead { max-width: 850px; color: #e2dfed; font-size: clamp(1.2rem, 2.4vw, 1.65rem) !important; }
+    .pink { color: #ffabc5; }
+    .cyan-text { color: #84e7f2; }
+    .gold-text { color: #ffe28d; }
+    .green-text { color: #a7e8ba; }
+    .red-text { color: #ffabb5; }
+
+    .panel, .card, .step, .question, .mode {
+      border: var(--border);
+      background: var(--night2);
+      box-shadow: 7px 7px 0 #17182b;
+      color: var(--paper);
+    }
+
+    .panel { padding: clamp(18px, 3vw, 28px); }
+    .card { min-height: 120px; padding: 18px; }
+    .card p, .mode p { color: #e2dfed; }
+    .mode.lecture-mode { border-color: var(--cyan); background: #2d4858; }
+    .mode.web-mode { border-color: var(--gold); background: #4b4130; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .label-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+    .tag { display: inline-block; padding: 6px 9px; border: 2px solid var(--ink); background: var(--paper2); color: var(--ink); font-size: .77rem; }
+    .tag.lecture { background: #d7f4f6; }
+    .tag.web { background: #ffe2a0; }
+    .tag.correct { background: #d6f1df; }
+    .tag.wrong { background: #f8d7dc; }
+
+    .quest-path {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      align-items: stretch;
+      margin: 22px 0;
+    }
+
+    .quest-path .step {
+      position: relative;
+      padding: 16px 12px;
+      background: var(--night2);
+      text-align: center;
+    }
+
+    .quest-path .step:not(:last-child)::after {
+      content: "➜";
+      position: absolute;
+      z-index: 1;
+      top: 40%;
+      right: -17px;
+      color: var(--gold);
+      font-weight: 900;
+    }
+
+    .step-num {
+      display: inline-grid;
+      width: 30px;
+      height: 30px;
+      place-items: center;
+      margin-bottom: 6px;
+      background: var(--gold);
+      color: var(--night);
+      font: 900 .8rem ui-monospace, Consolas, monospace;
+    }
+
+    .step p { margin: 6px 0 0; color: var(--muted); font-size: .94rem; }
+    .question { max-width: 900px; padding: 22px; }
+    .option { margin: 7px 0; padding: 9px 12px; border: 2px solid #d6ceb9; background: #fffdf6; color: var(--ink); }
+    .option.answer { border-color: #3b8c63; background: #d6f1df; }
+    .source { position: absolute; right: 24px; bottom: 14px; max-width: 75%; color: #d3d1df; font-size: .72rem; text-align: right; }
+    .source a { color: inherit; }
+    .source a:hover { color: var(--gold); }
+
+    .map {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin: 18px 0;
+    }
+
+    .node {
+      position: relative;
+      min-height: 78px;
+      display: grid;
+      place-items: center;
+      padding: 12px;
+      border: 3px solid #aeb0cc;
+      background: var(--night2);
+      box-shadow: 4px 4px 0 #17182b;
+      color: var(--paper);
+      text-align: center;
+      font-weight: 800;
+    }
+
+    .map .node:not(:nth-child(4n))::after {
+      content: "▶";
+      position: absolute;
+      z-index: 1;
+      top: 50%;
+      right: -14px;
+      color: var(--gold);
+      transform: translateY(-50%);
+    }
+
+    .map .node:nth-child(4)::after {
+      content: "▼";
+      top: auto;
+      right: 50%;
+      bottom: -19px;
+      transform: translateX(50%);
+    }
+
+    .map .node:nth-child(5) { grid-column: 4; }
+    .map .node:nth-child(6) { grid-column: 3; }
+    .map .node:nth-child(7) { grid-column: 2; }
+    .map .node:nth-child(8) { grid-column: 1; }
+    .map .node:nth-child(5)::after,
+    .map .node:nth-child(6)::after,
+    .map .node:nth-child(7)::after {
+      content: "◀";
+      right: auto;
+      left: -14px;
+    }
+    .map .node:nth-child(8)::after { content: none; }
+
+    .node.gate { border-color: var(--gold); background: #55492f; }
+    .node.human { border-color: var(--pink); background: #523547; }
+    .node.end { border-color: var(--green); background: #2e4c3b; }
+    .branch { margin: 8px 0; padding: 12px; border-left: 5px solid var(--pink); background: #493344; color: var(--paper); }
+    .loop-band { border: 2px dashed var(--pink); background: #383148; }
+    .save-slot { padding: 14px; border: 3px dashed var(--cyan); background: var(--night2); color: var(--paper); }
+
+    .controls {
+      height: 62px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 20px;
+      background: var(--night);
+      color: var(--paper);
+    }
+
+    .controls button {
+      min-width: 100px;
+      padding: 9px 12px;
+      border: 2px solid var(--paper);
+      background: var(--gold);
+      color: var(--night);
+      cursor: pointer;
+      font: 850 .9rem ui-monospace, Consolas, monospace;
+    }
+
+    .controls button:disabled { opacity: .45; cursor: not-allowed; }
+    .controls button:focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; }
+    .progress { height: 4px; background: #4a4b67; }
+    .progress div { height: 100%; background: var(--pink); transition: width .2s; }
+    .hint { padding: 12px 14px; border-left: 5px solid var(--cyan); background: #293b52; color: var(--paper); }
+    .warning { padding: 12px 14px; border-left: 5px solid var(--gold); background: #4a3e2d; color: var(--paper); }
+    .pixel-monster { display: inline-block; padding: 8px 10px; border: 3px solid var(--ink); background: var(--pink); color: var(--night); font: 900 1.1rem ui-monospace, Consolas, monospace; }
+
+    @media (max-width: 760px) {
+      .slide { padding: 22px 18px 52px; }
+      .cover-layout { grid-template-columns: 1fr; align-content: start; gap: 10px; padding: 12px 0 0; }
+      .cover-slide h1 { margin: 4px 0 8px; font-size: clamp(2.1rem, 9vw, 3.2rem); }
+      .cover-subtitle { margin-bottom: 8px; font-size: 1.1rem !important; }
+      .cover-slide .lead { font-size: 1.05rem !important; line-height: 1.4; }
+      .cover-flow { margin-top: 10px; }
+      .quest-objective { margin: 0 8px 0 0; padding: 14px; }
+      .quest-objective h2 { margin: 6px 0; font-size: 1.2rem; }
+      .quest-objective p, .quest-objective li { font-size: .9rem; line-height: 1.35; }
+      .quest-objective ul { margin: 6px 0; padding-left: 1.1em; }
+      .quest-objective .pixel-code { margin: 8px 0 2px; }
+      .pixel-mascot { width: 48px; height: 48px; }
+      .grid, .grid.three, .grid.four, .quest-path, .map { grid-template-columns: 1fr; }
+      .problem-slide .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+      .problem-slide .card { min-height: 0; padding: 12px; }
+      .problem-slide .card h3 { font-size: 1rem; }
+      .problem-slide .card p { font-size: .9rem; }
+      .map .node:nth-child(n) { grid-column: 1; }
+      .map .node:not(:last-child)::after {
+        content: "▼";
+        top: auto;
+        right: 50%;
+        bottom: -19px;
+        left: auto;
+        transform: translateX(50%);
+      }
+      .map .node:last-child::after { content: none; }
+      .quest-path .step:not(:last-child)::after { content: "↓"; top: auto; right: 50%; bottom: -19px; }
+      .source { position: static; max-width: none; margin-top: 20px; text-align: left; }
+      .controls { padding: 0 10px; }
+      .controls button { min-width: 76px; font-size: .75rem; }
+    }
+
+    @media (max-width: 640px) {
+      .problem-slide .grid.three { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="deck" aria-live="polite">
+    <section class="slide active cover-slide" aria-label="第 1 頁：AI 考前練習助理">
+      <div class="cover-topbar">
+        <p class="eyebrow">STUDY QUEST · MAIN MISSION</p>
+        <span class="quest-stamp">考前備戰 / QUEST 01</span>
+      </div>
+      <div class="cover-layout">
+        <div>
+          <h1><span class="cover-title-accent">AI 考前練習助理</span></h1>
+          <p class="cover-subtitle">上傳講義／簡報，整理重點，再出題練習</p>
+          <p class="lead">選好課程和考試範圍，再上傳講義或貼上連結。助理會整理重點、照資料出題；答錯可以重練，也可以先跳過，之後再從這門課的錯題本繼續練。</p>
+          <div class="cover-flow" aria-label="任務流程">
+            <span>選課程</span><b>→</b><span>上傳或貼連結</span><b>→</b><span>整理重點、出題</span><b>→</b><span>作答、錯題存檔</span>
+          </div>
+        </div>
+        <aside class="quest-objective">
+          <div class="pixel-mascot" aria-hidden="true"></div>
+          <span class="quest-stamp">QUEST LOG</span>
+          <h2>任務目標</h2>
+          <ul>
+            <li>每題都能找到來源依據</li>
+            <li>講義與網路補充清楚分色</li>
+            <li>先整理考前重點再開始練習</li>
+            <li>每門課有自己的題庫和錯題庫</li>
+          </ul>
+          <p><strong>通關成果：</strong>可追溯題庫 + 可下載錯題集</p>
+          <p class="pixel-code">PRESS → TO START</p>
+          <p class="cover-source">設計說明：<a href="../wiki/overview.md">Wiki overview</a></p>
+        </aside>
+      </div>
+    </section>
+
+    <section class="slide problem-slide" aria-label="第 2 頁：一般 AI 單次出題可能遇到的問題">
+      <p class="eyebrow">一般 AI 單次出題 · 可能遇到的問題</p>
+      <h2>只叫一般 AI 出題，可能會遇到這三件事</h2>
+      <div class="grid three">
+        <article class="card"><span class="pixel-monster">?</span><h3>答案有附資料來源嗎？</h3><p>如果只叫一般 AI 出題、沒有要求引用，它可能把講義以外的常識也混進答案。</p></article>
+        <article class="card"><span class="pixel-monster">!</span><h3>考試範圍都有練到嗎？</h3><p>只用一句提示一次出題，題目可能集中在少數章節，漏掉其他考試單元。</p></article>
+        <article class="card"><span class="pixel-monster">↺</span><h3>錯題下次還找得到嗎？</h3><p>一般聊天回答完就結束；如果沒有另外保存，答錯的題目很容易找不到。</p></article>
+      </div>
+      <p class="hint"><strong>和 Study Quest 的差別：</strong>以上是普通 AI 單次出題時可能遇到的風險，不是 Study Quest 的執行結果。本設計會檢查題目來源與考試範圍，並把跳過的錯題存進該課題庫。</p>
+      <p class="source">設計依據：<a href="../wiki/overview.md">專案目標</a> · <a href="../wiki/article3.md">題目如何附上資料來源</a></p>
+    </section>
+
+    <section class="slide" aria-label="第 3 頁：一般 AI 與 Study Quest 的流程差異">
+      <p class="eyebrow">一般 AI 和 Study Quest：差在哪裡？</p>
+      <h2>一般 AI 一次出題；Study Quest 多做哪些檢查？</h2>
+      <div class="grid">
+        <article class="panel">
+          <h3>一般聊天 AI：一次問、一次答</h3>
+          <p>貼上講義，請它一次出一批題目。</p>
+          <p class="red-text">除非另外要求，題目來源、考試範圍和錯題保存通常還要自己確認、整理。</p>
+        </article>
+        <article class="panel">
+          <h3>Study Quest：一步一步檢查</h3>
+          <p>先選課程與範圍，再找資料、出題、檢查；答題後可重練或保存跳過的錯題。</p>
+          <p class="green-text">來源、考試範圍與錯題，都有對應的處理步驟。</p>
+        </article>
+      </div>
+      <p class="warning">差別不是換一個更厲害的 AI，而是把查來源、檢查題目和保存錯題安排成清楚的流程。</p>
+      <p class="source">參考資料：<a href="../wiki/article1.md">AI 工作流程的介紹</a>（S1）</p>
+    </section>
+
+    <section class="slide" aria-label="第 4 頁：課程專案">
+      <p class="eyebrow">課程管理 · 每門課分開保存</p>
+      <h2>每門課都有自己的資料夾</h2>
+      <div class="grid three">
+        <div class="save-slot"><span class="tag">課程 1</span><h3>資料庫系統</h3><p>講義、考試範圍、練習題和錯題都放在一起。</p></div>
+        <div class="save-slot"><span class="tag">課程 2</span><h3>認知心理學</h3><p>這門課的資料不會和其他課混在一起。</p></div>
+        <div class="save-slot"><span class="tag">新增課程</span><h3>建立另一門課</h3><p>可以取名字、選擇課程，或刪除不需要的課程。</p></div>
+      </div>
+      <p>可以用全部資料練習，也可以只選幾個單元。考前重點、練習題和錯題都能下載成 PDF。</p>
+      <p class="source">課程資料怎麼分開保存：<a href="../wiki/workflow.md">查看課程資料的整理方式</a></p>
+    </section>
+
+    <section class="slide" aria-label="第 5 頁：兩種資料模式">
+      <p class="eyebrow">資料來源 · 選擇怎麼出題</p>
+      <h2>只看課程資料，或再加上網路資料</h2>
+      <div class="grid">
+        <article class="mode lecture-mode" style="padding:20px">
+          <span class="tag lecture">藍色 · 只用課程資料</span>
+          <h3>只根據這門課的講義或簡報</h3>
+          <ul><li>可以上傳檔案，或貼上能讀取的連結。</li><li>標出資料名稱、章節或頁碼。</li><li>資料沒提到的事，就直接說找不到答案。</li></ul>
+        </article>
+        <article class="mode web-mode" style="padding:20px">
+          <span class="tag web">黃色 · 加上網路資料</span>
+          <h3>用可信的網路資料補充說明</h3>
+          <ul><li>優先找學校、政府或專業機構資料。</li><li>網路內容用黃色標出，不和講義混在一起。</li><li>附上資料名稱和連結，方便自己確認。</li></ul>
+        </article>
+      </div>
+      <p class="source">資料來源怎麼選：<a href="../wiki/overview.md">課程資料的使用方式</a> · <a href="../wiki/article3.md">如何讓題目有根據</a></p>
+    </section>
+
+    <section class="slide" aria-label="第 6 頁：考前重點整理">
+      <p class="eyebrow">考前重點 · 先看懂再練習</p>
+      <h2>不只出題，也能先把資料整理成考前重點</h2>
+      <p class="lead">把長講義拆成幾個好讀的重點，先掌握每章在說什麼，再開始練習。</p>
+      <div class="grid three">
+        <article class="card"><span class="tag">整理方式 1</span><h3>按章節整理</h3><p>先看每一章在講什麼，知道整份資料的重點在哪裡。</p></article>
+        <article class="card"><span class="tag">整理方式 2</span><h3>抓出重要內容</h3><p>整理關鍵名詞、重要步驟、概念差異和容易搞混的地方。</p></article>
+        <article class="card"><span class="tag">整理方式 3</span><h3>附上資料位置</h3><p>每個重點都標出章節或頁碼，需要時能回到原文確認。</p></article>
+      </div>
+      <div class="panel">
+        <div class="label-row"><span class="tag">重點整理範例</span><span class="tag web">ReAct 研究</span></div>
+        <p><strong>一句話記住：</strong>AI 先想下一步，再採取行動，並根據結果繼續思考。</p>
+        <p><strong>簡單流程：</strong>想下一步 → 查資料或操作 → 看結果 → 再決定。</p>
+        <p class="gold-text"><strong>容易誤會的地方：</strong>有資料來源，不代表答案一定正確；還是要回頭核對。</p>
+      </div>
+      <p class="source">範例資料：<a href="../wiki/article2.md">ReAct 研究介紹</a></p>
+    </section>
+
+    <section class="slide" aria-label="第 7 頁：資料卡">
+      <p class="eyebrow">資料卡 · 出題前先看來源</p>
+      <h2>先確認資料，再把題目放進題庫</h2>
+      <div class="panel">
+        <div class="label-row"><span class="tag web">網路資料</span><span class="tag">來源卡 S2-E1</span></div>
+        <p><strong>資料來源：</strong>Yao 等人的 ReAct 研究摘要</p>
+        <p><strong>這份資料提到：</strong>AI 會在「想下一步」和「採取行動」之間來回；行動可能是查資料或和外部環境互動。</p>
+        <p><strong>這份資料沒有說：</strong>這樣做就能保證答案正確。</p>
+      </div>
+      <p class="hint">每題都記下用了哪份資料、哪一段內容，以及資料是來自講義還是網路。</p>
+      <p class="source">來源卡範例：<a href="../wiki/evidence-cards.md">查看 S2-E1 題目示範</a> · 研究原文：<a href="https://arxiv.org/abs/2210.03629" target="_blank" rel="noreferrer">arXiv:2210.03629</a></p>
+    </section>
+
+    <section class="slide" aria-label="第 8 頁：示範題">
+      <p class="eyebrow">練習題示範 · 依資料出題</p>
+      <h2>這道題目真的有資料根據嗎？</h2>
+      <div class="question">
+        <span class="tag web">網路資料 · S2 研究摘要</span>
+        <p><strong>依這篇研究，AI 一邊想下一步、一邊採取行動，主要是為了什麼？</strong></p>
+        <div class="option">A. 讓 AI 完全不必查外部資料。</div>
+        <div class="option answer">B. 讓 AI 查資料或和外部環境互動，取得接下來需要的資訊。</div>
+        <div class="option">C. 保證每次回答都正確。</div>
+        <div class="option">D. 每個問題都使用同一種工具。</div>
+        <p class="green-text"><strong>正確答案是 B：</strong>研究摘要說 AI 可以和外部資料互動，沒有說這樣就能保證答對。</p>
+      </div>
+      <p class="source">題目來源：<a href="../wiki/evidence-cards.md">查看題目和資料的對照</a> · <a href="https://arxiv.org/abs/2210.03629" target="_blank" rel="noreferrer">S2 研究原文</a></p>
+    </section>
+
+    <section class="slide" aria-label="第 9 頁：題目檢查">
+      <p class="eyebrow">出題檢查 · 通過才放進題庫</p>
+      <h2>每道題目都先檢查這三件事</h2>
+      <div class="grid three">
+        <div class="card"><span class="tag correct">檢查 1</span><h3>找得到資料根據</h3><p>題目、答案和解說都能找到對應的資料。</p></div>
+        <div class="card"><span class="tag correct">檢查 2</span><h3>答案只有一個</h3><p>不會有兩個選項看起來都答得通。</p></div>
+        <div class="card"><span class="tag correct">檢查 3</span><h3>分清楚資料來源</h3><p>一眼看得出題目是依講義，還是依網路資料。</p></div>
+      </div>
+      <div class="branch"><strong>如果沒通過：</strong>先修改這一題再檢查；還是確認不了，就不放進題庫，並說明原因。</div>
+      <p class="source">如何檢查 AI 題目：<a href="../wiki/article5.md">查看檢查方式</a> · <a href="../wiki/workflow.md">查看完整流程</a></p>
+    </section>
+
+    <section class="slide" aria-label="第 10 頁：作答回饋">
+      <p class="eyebrow">作答方式 · 選擇何時看答案</p>
+      <h2>你可以選擇怎麼看答案</h2>
+      <div class="grid">
+        <article class="card"><span class="tag">方式 A</span><h3>每題答完馬上看</h3><p>立刻知道對不對，並查看答案說明和資料來源。</p></article>
+        <article class="card"><span class="tag">方式 B</span><h3>全部答完再看</h3><p>先完成練習，再一次查看結果、解說和答錯的題目。</p></article>
+      </div>
+      <div class="branch"><span class="pixel-monster">!</span> 答錯不是扣分懲罰：先看解說和資料，再自己選擇重練或跳過。</div>
+      <p class="source">作答後怎麼處理：<a href="../wiki/workflow.md">查看答題和錯題的安排</a></p>
+    </section>
+
+    <section class="slide" aria-label="第 11 頁：錯題庫">
+      <p class="eyebrow">錯題本 · 跳過也會保存</p>
+      <h2>跳過的題目不會消失，以後還能再練</h2>
+      <div class="quest-path">
+        <div class="step"><span class="step-num">1</span><strong>答錯了</strong><p>先看答案說明</p></div>
+        <div class="step"><span class="step-num">2</span><strong>選擇跳過</strong><p>要不要重練由你決定</p></div>
+        <div class="step"><span class="step-num">3</span><strong>存進錯題本</strong><p>只放在這門課裡</p></div>
+        <div class="step"><span class="step-num">4</span><strong>下次再練</strong><p>也可以下載成 PDF</p></div>
+      </div>
+      <div class="panel"><strong>錯題本會記下：</strong>題目、你選的答案、正確答案、資料來源和課程名稱。</div>
+      <p class="source">錯題怎麼保存：<a href="../wiki/workflow.md">查看錯題本的安排</a></p>
+    </section>
+
+    <section class="slide" aria-label="第 12 頁：上傳後的使用流程">
+      <p class="eyebrow">快速開始 · 照步驟複習</p>
+      <h2>上傳資料後，照這幾步開始複習</h2>
+      <div class="map">
+        <div class="node">1. 選一門課</div>
+        <div class="node">2. 上傳講義或貼上連結</div>
+        <div class="node">3. 選要複習的單元</div>
+        <div class="node">4. 看重點和資料來源</div>
+        <div class="node gate">5. 出題並檢查答案</div>
+        <div class="node human">6. 開始作答</div>
+        <div class="node human">7. 答錯就重練或跳過</div>
+        <div class="node end">8. 保存錯題，之後再練</div>
+      </div>
+      <div class="grid">
+        <p class="hint"><strong>只用課程資料：</strong>答案只根據你的講義；講義沒寫到，就會告訴你找不到。</p>
+        <p class="warning"><strong>加上網路資料：</strong>網路補充會用黃色標出並附上連結。連結讀不到，就改貼其他連結或上傳檔案。</p>
+      </div>
+      <p class="source">完整使用說明和流程圖：<a href="../wiki/user-guide.md">查看一步一步的操作方式</a></p>
+    </section>
+
+    <section class="slide" aria-label="第 13 頁：流程中如何重做出錯的步驟">
+      <p class="eyebrow">流程怎麼修正 · 只重做出錯的地方</p>
+      <h2>遇到問題，只重做需要修正的步驟</h2>
+      <div class="grid">
+        <div class="panel loop-band">
+          <span class="tag">出題後的重複檢查（Loop）</span>
+          <p>先找資料，再出一道題；檢查答案和來源。有問題就修改這一題，再檢查一次。</p>
+          <p>改了幾次還是不行，就先拿掉這題，並說明原因。</p>
+        </div>
+        <div class="panel loop-band">
+          <span class="tag">答錯後的練習（Loop）</span>
+          <p>答錯後先看解說，再由你選擇重練或跳過。</p>
+          <p>跳過的題目會放進錯題本，下次可以接著練。</p>
+        </div>
+      </div>
+      <p class="green-text"><strong>簡單說：</strong>Graph（流程圖）安排每一步的順序；Loop（重複檢查）用來修好出錯的那一步，不必整份重來。</p>
+      <p class="source">參考資料：<a href="../wiki/article2.md">ReAct 研究介紹</a> · <a href="../wiki/article5.md">如何檢查題目是否合格</a></p>
+    </section>
+
+    <section class="slide" aria-label="第 14 頁：實際檢查紀錄">
+      <p class="eyebrow">實際檢查紀錄 · 人工試做一次</p>
+      <h2>用 S2 資料出題後，我們檢查了哪些事？</h2>
+      <div class="grid">
+        <article class="card"><span class="tag correct">通過</span><h3>題目和答案有根據</h3><p>能在 ReAct 研究摘要裡找到相關說明。</p></article>
+        <article class="card"><span class="tag correct">通過</span><h3>只有一個正確答案</h3><p>B 符合資料；「保證答對」沒有資料支持。</p></article>
+        <article class="card"><span class="tag correct">通過</span><h3>資料來源說清楚</h3><p>標明這是網路研究資料，並附上原文連結。</p></article>
+        <article class="card"><span class="tag">功能規劃</span><h3>可以下載帶走的複習資料</h3><p>設計上可把考前重點、練習題或錯題集整理成 PDF，下載後留著複習。</p></article>
+      </div>
+      <p class="source">檢查紀錄：<a href="../wiki/log.md">查看實際檢查過程</a> · <a href="../wiki/evidence-cards.md">查看題目和來源</a></p>
+    </section>
+
+    <section class="slide" aria-label="第 15 頁：結論與反思">
+      <p class="eyebrow">完成反思 · 發現問題後怎麼改</p>
+      <h2>結論：有依據，才值得重練</h2>
+      <div class="grid">
+        <div class="panel"><h3>最容易出錯</h3><p>題目看起來合理，卻可能不是講義教的，或引用錯資料。</p></div>
+        <div class="panel"><h3>把檢查提前</h3><p>題目放進題庫前，先確認資料裡真的有提到。</p></div>
+        <div class="panel"><h3>流程怎麼改</h3><p>每題都先檢查；有問題只重做那一題，不必整份重來。</p></div>
+        <div class="panel"><h3>小隊守則</h3><p>講義與網路分色、缺資料就明說、錯題可以回來練。</p></div>
+      </div>
+      <div class="label-row">
+        <a class="tag" href="../wiki/index.md">Wiki 圖鑑</a>
+        <a class="tag" href="../wiki/workflow.md">流程地圖</a>
+        <a class="tag" href="../raw/sources.md">五項來源</a>
+      </div>
+      <p class="source">總結與反思：<a href="../wiki/log.md">查看檢查和修改紀錄</a></p>
+    </section>
+  </main>
+
+  <div class="progress" aria-hidden="true"><div id="progress"></div></div>
+  <nav class="controls" aria-label="簡報控制">
+    <button id="prev" type="button" aria-label="上一頁">← 上一頁</button>
+    <span id="counter">1 / 14</span>
+    <span class="pixel-code">STUDY QUEST</span>
+    <button id="next" type="button" aria-label="下一頁">下一頁 →</button>
+  </nav>
+
+  <script>
+    const slides = Array.from(document.querySelectorAll(".slide"));
+    const counter = document.getElementById("counter");
+    const progress = document.getElementById("progress");
+    const previous = document.getElementById("prev");
+    const next = document.getElementById("next");
+    let current = 0;
+
+    function show(index) {
+      current = Math.max(0, Math.min(index, slides.length - 1));
+      slides.forEach((slide, i) => slide.classList.toggle("active", i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+      previous.disabled = current === 0;
+      next.disabled = current === slides.length - 1;
+    }
+
+    previous.addEventListener("click", () => show(current - 1));
+    next.addEventListener("click", () => show(current + 1));
+    document.addEventListener("keydown", event => {
+      if (event.key === "ArrowRight" || event.key === "PageDown" || event.key === " ") show(current + 1);
+      if (event.key === "ArrowLeft" || event.key === "PageUp") show(current - 1);
+      if (event.key === "Home") show(0);
+      if (event.key === "End") show(slides.length - 1);
+    });
+
+    show(0);
+  </script>
+</body>
+</html>
